@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flame Duo — Prototype 3D | IvoirCuisson</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; font-family: 'Segoe UI', system-ui, sans-serif; }
+  #app { position: fixed; inset: 0; }
+  canvas { display: block; }
+
+  .ui { position: fixed; z-index: 10; color: #2b2118; }
+  .ui.top { top: 24px; left: 28px; }
+  .ui.top h1 { font-size: 20px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; }
+  .ui.top p { font-size: 12px; opacity: 0.65; margin-top: 4px; letter-spacing: 0.05em; }
+  .ui.bottom { bottom: 24px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; align-items: center; }
+  .hint { font-size: 12px; opacity: 0.55; letter-spacing: 0.04em; }
+  #fireBtn {
+    border: 0; cursor: pointer; padding: 12px 22px; border-radius: 999px;
+    background: #1a1a1c; color: #f5e9d8; font-size: 14px; letter-spacing: 0.06em;
+    transition: transform .15s ease, box-shadow .15s ease;
+    box-shadow: 0 4px 18px rgba(30, 20, 10, 0.25);
+  }
+  #fireBtn:hover { transform: translateY(-2px); }
+  #fireBtn.on { background: #c1272d; }
+  #loader {
+    position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+    background: #ead9c2; z-index: 20; transition: opacity .5s ease; font-size: 13px;
+    letter-spacing: 0.2em; text-transform: uppercase; color: #2b2118;
+  }
+  #loader.hidden { opacity: 0; pointer-events: none; }
+</style>
+</head>
+<body>
+<div id="loader">Chargement du Flame Duo…</div>
+<div class="ui top">
+  <h1>Flame Duo</h1>
+  <p>Prototype 3D procédural — IvoirCuisson</p>
+</div>
+<div class="ui bottom">
+  <button id="fireBtn">🔥 Allumer le feu</button>
+  <span class="hint">Glisser pour tourner · Molette pour zoomer</span>
+</div>
+<div id="app"></div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.185.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.185.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+// ---------------------------------------------------------------- Scene setup
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#ead9c2');
+
+const camera = new THREE.PerspectiveCamera(38, innerWidth / innerHeight, 0.1, 100);
+camera.position.set(3.1, 2.2, 3.6);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+document.getElementById('app').appendChild(renderer.domElement);
+
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity = 0.55;
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 0.85, 0);
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.minDistance = 1.8;
+controls.maxDistance = 9;
+controls.maxPolarAngle = Math.PI * 0.49;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.9;
+controls.addEventListener('start', () => { controls.autoRotate = false; });
+
+// ---------------------------------------------------------------- Lights
+const hemi = new THREE.HemisphereLight(0xfff5e6, 0x9a8a72, 0.6);
+scene.add(hemi);
+
+const key = new THREE.DirectionalLight(0xfff2e0, 2.2);
+key.position.set(4, 6, 3);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.camera.left = -3; key.shadow.camera.right = 3;
+key.shadow.camera.top = 3;   key.shadow.camera.bottom = -3;
+key.shadow.bias = -0.0004;
+scene.add(key);
+
+const fill = new THREE.DirectionalLight(0xdfe8ff, 0.5);
+fill.position.set(-4, 3, -2);
+scene.add(fill);
+
+// Sol : reçoit uniquement l'ombre
+const ground = new THREE.Mesh(
+  new THREE.PlaneGeometry(30, 30),
+  new THREE.ShadowMaterial({ opacity: 0.22 })
+);
+ground.rotation.x = -Math.PI / 2;
+ground.receiveShadow = true;
+scene.add(ground);
+
+// ---------------------------------------------------------------- Materials
+const matBlack  = new THREE.MeshStandardMaterial({ color: 0x1b1b1e, roughness: 0.45, metalness: 0.55 });
+const matDark   = new THREE.MeshStandardMaterial({ color: 0x141416, roughness: 0.65, metalness: 0.4 });
+const matDarkF  = new THREE.MeshStandardMaterial({ color: 0x0e0e10, roughness: 0.65, metalness: 0.4 });
+const matSilver = new THREE.MeshStandardMaterial({ color: 0xd8d8dc, roughness: 0.25, metalness: 1.0 });
+const matRed    = new THREE.MeshStandardMaterial({ color: 0xc1272d, roughness: 0.4, metalness: 0.3 });
+
+// ------------------------------------------------- Géométrie : tronc de pyramide rectangulaire
+// hbx/hbz : demi-largeurs en bas — htx/htz : en haut — h : hauteur — invert : normales vers l'intérieur
+function frustumGeo(hbx, hbz, htx, htz, h, invert = false) {
+  const b = [[-hbx, -hbz], [hbx, -hbz], [hbx, hbz], [-hbx, hbz]];
+  const t = [[-htx, -htz], [htx, -htz], [htx, htz], [-htx, htz]];
+  const pos = [];
+  const push = (p) => pos.push(p[0], p[1], p[2]);
+  for (let i = 0; i < 4; i++) {
+    const j = (i + 1) % 4;
+    const p1 = [b[i][0], 0, b[i][1]], p2 = [b[j][0], 0, b[j][1]];
+    const p3 = [t[j][0], h, t[j][1]], p4 = [t[i][0], h, t[i][1]];
+    const tris = invert
+      ? [p1, p2, p3, p1, p3, p4]   // normales vers l'intérieur
+      : [p3, p2, p1, p4, p3, p1];  // normales vers l'extérieur
+    tris.forEach(push);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.computeVertexNormals();
+  return g;
+}
+
+// Anneau plat (rebord de bac) posé à l'horizontale
+function rimGeo(hxOut, hzOut, hxIn, hzIn) {
+  const s = new THREE.Shape();
+  s.moveTo(-hxOut, -hzOut); s.lineTo(hxOut, -hzOut);
+  s.lineTo(hxOut, hzOut);   s.lineTo(-hxOut, hzOut); s.closePath();
+  const hole = new THREE.Path();
+  hole.moveTo(-hxIn, -hzIn); hole.lineTo(hxIn, -hzIn);
+  hole.lineTo(hxIn, hzIn);   hole.lineTo(-hxIn, hzIn); hole.closePath();
+  s.holes.push(hole);
+  const g = new THREE.ShapeGeometry(s);
+  g.rotateX(-Math.PI / 2);
+  return g;
+}
+
+// ---------------------------------------------------------------- Le Flame Duo
+const stove = new THREE.Group();
+scene.add(stove);
+
+function addMesh(geo, mat, x = 0, y = 0, z = 0, parent = stove) {
+  const m = new THREE.Mesh(geo, mat);
+  m.position.set(x, y, z);
+  m.castShadow = true;
+  m.receiveShadow = true;
+  parent.add(m);
+  return m;
+}
+
+// --- Corps principal
+const BODY_W = 2.0, BODY_H = 0.55, BODY_D = 0.85, BODY_Y = 0.46;
+addMesh(new THREE.BoxGeometry(BODY_W, BODY_H, BODY_D), matBlack, 0, BODY_Y + BODY_H / 2, 0);
+
+// --- Pieds : montant carré + base pyramidale
+const LEG_POS = [[-0.86, -0.32], [0.86, -0.32], [-0.86, 0.32], [0.86, 0.32]];
+for (const [lx, lz] of LEG_POS) {
+  addMesh(new THREE.BoxGeometry(0.11, 0.38, 0.11), matBlack, lx, 0.10 + 0.19, lz);
+  addMesh(frustumGeo(0.17, 0.17, 0.06, 0.06, 0.11), matBlack, lx, 0, lz);
+}
+
+// --- Bacs évasés (x2)
+const BOWL_X = [-0.52, 0.52];
+const BOWL_BASE_Y = BODY_Y + BODY_H - 0.01;  // posé sur le corps
+const BOWL_H = 0.42;
+const OUT_B = 0.335, OUT_T = 0.56;   // demi-largeurs paroi externe
+const IN_B  = 0.285, IN_T = 0.505;   // demi-largeurs paroi interne
+const RIM_Y = BOWL_BASE_Y + BOWL_H;
+
+for (const bx of BOWL_X) {
+  const bowl = new THREE.Group();
+  bowl.position.set(bx, 0, 0);
+  stove.add(bowl);
+  // paroi externe / interne / rebord / fond
+  addMesh(frustumGeo(OUT_B, OUT_B * 0.94, OUT_T, OUT_T * 0.94, BOWL_H), matBlack, 0, BOWL_BASE_Y, 0, bowl);
+  addMesh(frustumGeo(IN_B, IN_B * 0.94, IN_T, IN_T * 0.94, BOWL_H - 0.02, true), matDark, 0, BOWL_BASE_Y + 0.02, 0, bowl);
+  addMesh(rimGeo(OUT_T, OUT_T * 0.94, IN_T, IN_T * 0.94), matBlack, 0, RIM_Y, 0, bowl);
+  addMesh(new THREE.BoxGeometry(IN_B * 2, 0.02, IN_B * 1.88), matDarkF, 0, BOWL_BASE_Y + 0.03, 0, bowl);
+  // brûleur central
+  addMesh(new THREE.CylinderGeometry(0.09, 0.11, 0.05, 24), matDarkF, 0, BOWL_BASE_Y + 0.06, 0, bowl);
+  addMesh(new THREE.TorusGeometry(0.09, 0.012, 10, 32).rotateX(Math.PI / 2), matSilver, 0, BOWL_BASE_Y + 0.085, 0, bowl);
+  // poignée rouge posée sur le rebord, pointant vers l'intérieur du bac
+  const handle = new THREE.Group();
+  handle.position.set(-IN_T + 0.02, RIM_Y + 0.02, -0.14);
+  handle.rotation.y = 0.35;   // légèrement en biais comme sur la photo
+  handle.rotation.z = -0.12;  // pointe doucement vers le fond
+  bowl.add(handle);
+  addMesh(new THREE.CylinderGeometry(0.016, 0.016, 0.24, 12).rotateZ(Math.PI / 2), matRed, 0.12, 0, 0, handle);
+  addMesh(new THREE.SphereGeometry(0.022, 12, 8), matRed, 0.24, 0, 0, handle);
+  addMesh(new THREE.CylinderGeometry(0.02, 0.02, 0.04, 12).rotateZ(Math.PI / 2), matSilver, 0, 0, 0, handle);
+}
+
+// --- Boutons de commande chromés (face avant)
+const FRONT_Z = BODY_D / 2;
+for (const kx of [-0.55, 0.55]) {
+  addMesh(new THREE.CylinderGeometry(0.105, 0.105, 0.035, 32).rotateX(Math.PI / 2), matSilver, kx, BODY_Y + 0.28, FRONT_Z + 0.017);
+  addMesh(new THREE.CylinderGeometry(0.042, 0.048, 0.075, 24).rotateX(Math.PI / 2), matSilver, kx, BODY_Y + 0.28, FRONT_Z + 0.07);
+}
+
+// --- Logo IVOIRCUISSON (texture canvas sur la face avant)
+function makeLogoTexture() {
+  const c = document.createElement('canvas');
+  c.width = 1024; c.height = 320;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#f5efe4';
+  // petite flamme / goutte au-dessus du texte
+  ctx.save();
+  ctx.translate(512, 90);
+  ctx.beginPath();
+  ctx.moveTo(0, -55);
+  ctx.bezierCurveTo(30, -15, 34, 15, 0, 42);
+  ctx.bezierCurveTo(-34, 15, -30, -15, 0, -55);
+  ctx.fill();
+  ctx.restore();
+  // wordmark
+  ctx.font = '700 92px "Segoe UI", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  if ('letterSpacing' in ctx) ctx.letterSpacing = '14px';
+  ctx.fillText('IVOIRCUISSON', 512, 225);
+  const tex = new THREE.CanvasTexture(c);
+  tex.anisotropy = 8;
+  return tex;
+}
+const logo = new THREE.Mesh(
+  new THREE.PlaneGeometry(0.78, 0.244),
+  new THREE.MeshBasicMaterial({ map: makeLogoTexture(), transparent: true, toneMapped: false })
+);
+logo.position.set(0, BODY_Y + 0.27, FRONT_Z + 0.003);
+stove.add(logo);
+
+// ---------------------------------------------------------------- Flammes 🔥
+function makeFlameTexture() {
+  const c = document.createElement('canvas');
+  c.width = c.height = 128;
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+  g.addColorStop(0.0, 'rgba(255,240,180,1)');
+  g.addColorStop(0.25, 'rgba(255,170,60,0.9)');
+  g.addColorStop(0.6, 'rgba(230,80,20,0.4)');
+  g.addColorStop(1.0, 'rgba(0,0,0,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 128, 128);
+  return new THREE.CanvasTexture(c);
+}
+const flameTex = makeFlameTexture();
+const flames = [];   // { sprite, baseScale, phase, speed, x, z, baseY }
+const fireLights = [];
+
+for (const bx of BOWL_X) {
+  const light = new THREE.PointLight(0xff7722, 0, 2.6, 2);
+  light.position.set(bx, RIM_Y - 0.05, 0);
+  scene.add(light);
+  fireLights.push(light);
+
+  for (let i = 0; i < 9; i++) {
+    const mat = new THREE.SpriteMaterial({
+      map: flameTex,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      transparent: true,
+      opacity: 0,
+    });
+    const s = new THREE.Sprite(mat);
+    const a = (i / 9) * Math.PI * 2;
+    const r = i === 0 ? 0 : 0.06 + Math.random() * 0.09;
+    const x = bx + Math.cos(a) * r;
+    const z = Math.sin(a) * r;
+    const baseY = BOWL_BASE_Y + 0.18;
+    s.position.set(x, baseY, z);
+    scene.add(s);
+    flames.push({
+      sprite: s,
+      baseScale: 0.22 + Math.random() * 0.18,
+      phase: Math.random() * Math.PI * 2,
+      speed: 6 + Math.random() * 5,
+      x, z, baseY,
+    });
+  }
+}
+
+let fireOn = new URLSearchParams(location.search).has('fire'); // ?fire=1 : allumé au chargement
+let fireAmount = fireOn ? 1 : 0; // 0 → 1, interpolé pour un allumage progressif
+const fireBtn = document.getElementById('fireBtn');
+if (fireOn) { fireBtn.classList.add('on'); fireBtn.textContent = '💨 Éteindre'; }
+fireBtn.addEventListener('click', () => {
+  fireOn = !fireOn;
+  fireBtn.classList.toggle('on', fireOn);
+  fireBtn.textContent = fireOn ? '💨 Éteindre' : '🔥 Allumer le feu';
+});
+
+// ---------------------------------------------------------------- Boucle de rendu
+const clock = new THREE.Clock();
+function animate() {
+  requestAnimationFrame(animate);
+  const t = clock.getElapsedTime();
+
+  fireAmount += ((fireOn ? 1 : 0) - fireAmount) * 0.06;
+
+  for (const f of flames) {
+    const flicker = 0.75 + 0.25 * Math.sin(t * f.speed + f.phase) * Math.sin(t * 3.7 + f.phase * 2);
+    const sc = f.baseScale * flicker * fireAmount;
+    f.sprite.scale.set(sc, sc * (1.5 + 0.3 * Math.sin(t * f.speed * 0.7 + f.phase)), 1);
+    f.sprite.position.y = f.baseY + 0.05 * Math.sin(t * f.speed * 0.5 + f.phase) * fireAmount;
+    f.sprite.material.opacity = fireAmount * (0.55 + 0.45 * flicker);
+  }
+  for (let i = 0; i < fireLights.length; i++) {
+    fireLights[i].intensity = fireAmount * (2.2 + 0.9 * Math.sin(t * 11 + i * 2.1) * Math.sin(t * 5.3));
+  }
+
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+
+const loaderEl = document.getElementById('loader');
+if (new URLSearchParams(location.search).has('shot')) loaderEl.remove(); // capture headless : pas de fondu
+loaderEl.classList.add('hidden');
+loaderEl.addEventListener('transitionend', () => loaderEl.remove(), { once: true });
+setTimeout(() => loaderEl.remove(), 700); // filet de sécurité si la transition ne part pas
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>
