@@ -21,7 +21,7 @@ export function ProductCard({ product }: { product: ShopProduct }) {
                 className="block"
                 aria-label={`Voir ${product.name}`}
             >
-                <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-gradient-to-b from-coal-800 to-coal-900">
+                <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-white">
                     {product.image ? (
                         <img
                             src={product.image}

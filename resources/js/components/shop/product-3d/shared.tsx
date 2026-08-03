@@ -68,11 +68,13 @@ export function flamePath(
 
 /**
  * Charge le logo du site (personnalisable dans l'admin) et le prépare pour
- * la gravure sur tôle : fond blanc rendu transparent, gris du texte
- * éclairci en teinte sable pour rester lisible sur l'acier sombre, flamme
- * orange conservée. Retourne null tant que l'image n'est pas prête.
+ * la gravure sur tôle : fond blanc rendu transparent et, si `recolorForSteel`
+ * (défaut), gris du texte éclairci en teinte sable pour rester lisible sur
+ * l'acier sombre — flamme orange conservée. Avec `recolorForSteel: false`,
+ * les couleurs d'origine sont gardées (pour plaque claire). Retourne null
+ * tant que l'image n'est pas prête.
  */
-export function useLogoTexture(): THREE.CanvasTexture | null {
+export function useLogoTexture(recolorForSteel = true): THREE.CanvasTexture | null {
     const [texture, setTexture] = useState<THREE.CanvasTexture | null>(null);
 
     useEffect(() => {
@@ -119,7 +121,10 @@ export function useLogoTexture(): THREE.CanvasTexture | null {
                 }
 
                 // Texte gris (faible saturation) → sable clair.
-                if (Math.max(r, g, b) - Math.min(r, g, b) < 40) {
+                if (
+                    recolorForSteel &&
+                    Math.max(r, g, b) - Math.min(r, g, b) < 40
+                ) {
                     data[i] = 216;
                     data[i + 1] = 208;
                     data[i + 2] = 196;
@@ -137,7 +142,7 @@ export function useLogoTexture(): THREE.CanvasTexture | null {
         return () => {
             cancelled = true;
         };
-    }, []);
+    }, [recolorForSteel]);
 
     return texture;
 }

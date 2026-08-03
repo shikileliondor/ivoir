@@ -70,17 +70,17 @@ const MODELS: Record<string, ModelEntry> = {
     },
     'foyer-a-gaz-copper-flame-duo': {
         Component: CopperFlameDuoModel,
-        yOffset: -0.33,
-        camera: [1.05, 0.85, 1.05],
-        minDistance: 0.8,
-        maxDistance: 2.6,
+        yOffset: -0.45,
+        camera: [1.55, 0.95, 1.8],
+        minDistance: 1.0,
+        maxDistance: 3.2,
     },
     'fumoir-aurora-smoker': {
         Component: AuroraSmokerModel,
-        yOffset: -0.76,
-        camera: [1.75, 0.6, 2.3],
-        minDistance: 1.5,
-        maxDistance: 4,
+        yOffset: -0.9,
+        camera: [1.6, 0.55, 2.2],
+        minDistance: 1.4,
+        maxDistance: 4.2,
     },
 };
 

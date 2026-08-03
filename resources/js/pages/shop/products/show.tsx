@@ -62,7 +62,7 @@ export default function ProductShow({
                 <div className="mt-8 grid gap-12 lg:grid-cols-2">
                     {/* Visuel */}
                     <SectionReveal>
-                        <div className="relative flex aspect-square items-center justify-center overflow-hidden rounded-3xl border border-coal-800 bg-gradient-to-br from-coal-800 to-coal-900">
+                        <div className="relative flex aspect-square items-center justify-center overflow-hidden rounded-3xl border border-coal-800 bg-white">
                             {has3d && view === '3d' ? (
                                 <Suspense
                                     fallback={

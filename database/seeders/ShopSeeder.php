@@ -76,7 +76,7 @@ class ShopSeeder extends Seeder
                     'Usage' => 'Domestique et professionnel',
                 ],
                 'price' => 250000,
-                'image' => '/images/Majestic pro.png',
+                'image' => '/images/majestic-pro-2.webp',
                 'is_featured' => true,
             ],
             [
@@ -147,7 +147,7 @@ class ShopSeeder extends Seeder
                     'Accessoires' => 'Bac à copeaux de bois',
                 ],
                 'price' => 250000,
-                'image' => '/images/aurora-smoker.png',
+                'image' => '/images/fumoiraz.webp',
                 'is_featured' => true,
             ],
         ];
