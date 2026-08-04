@@ -20,7 +20,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { toast } from 'sonner';
 import { FireIntro } from '@/components/shop/fire-intro';
-import { FlameDuoScroll } from '@/components/shop/flame-duo-scroll';
+import { FumoirScroll } from '@/components/shop/fumoir-scroll';
 import { ProductCard } from '@/components/shop/product-card';
 import { SectionReveal } from '@/components/shop/section-reveal';
 import { useSiteImages } from '@/hooks/use-site-images';
@@ -240,11 +240,11 @@ export default function Home({ featuredProducts }: HomeProps) {
     };
 
     const testimonial = TESTIMONIALS[testimonialIndex];
-    const flameDuo = featuredProducts.find((product) =>
-        product.slug.includes('flame-duo'),
+    const fumoir = featuredProducts.find((product) =>
+        product.slug.includes('fumoir'),
     );
-    const flameDuoUrl = flameDuo
-        ? products.show.url({ product: flameDuo.slug })
+    const fumoirUrl = fumoir
+        ? products.show.url({ product: fumoir.slug })
         : products.index.url();
 
     return (
@@ -352,8 +352,8 @@ export default function Home({ featuredProducts }: HomeProps) {
                 </div>
             </section>
 
-            {/* Flame Duo en 3D — assemblage au scroll */}
-            <FlameDuoScroll productUrl={flameDuoUrl} />
+            {/* Fumoir Aurora Smoker en 3D — assemblage au scroll */}
+            <FumoirScroll productUrl={fumoirUrl} />
 
             {/* Produits phares */}
             <section className="mx-auto max-w-7xl px-5 py-24 lg:px-8">

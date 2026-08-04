@@ -10,8 +10,8 @@ import { cn } from '@/lib/utils';
 gsap.registerPlugin(ScrollTrigger);
 
 /** Chargé en différé : three.js n'est téléchargé que lorsque la section approche. */
-const FlameDuoCanvas = lazy(() =>
-    import('@/components/shop/flame-duo-3d').then((module) => ({ default: module.FlameDuoCanvas })),
+const FumoirCanvas = lazy(() =>
+    import('@/components/shop/fumoir-3d').then((module) => ({ default: module.FumoirCanvas })),
 );
 
 const STEPS = [
@@ -23,12 +23,12 @@ const STEPS = [
     {
         number: '02',
         title: 'Assemblage',
-        text: 'Corps, double foyer et commandes assemblés puis thermolaqués.',
+        text: 'Caisson, portes, grilles et tiroir à cendres assemblés puis thermolaqués.',
     },
     {
         number: '03',
-        title: 'Prêt à cuisiner',
-        text: 'Deux foyers puissants, une flamme maîtrisée du premier au dernier plat.',
+        title: 'Prêt à fumer',
+        text: 'La fumée s\'élève : viandes, poissons et volailles fumés à la perfection.',
     },
 ];
 
@@ -42,16 +42,17 @@ function supportsWebgl(): boolean {
     }
 }
 
-interface FlameDuoScrollProps {
-    /** Lien vers la fiche produit du Flame Duo. */
+interface FumoirScrollProps {
+    /** Lien vers la fiche produit du fumoir Aurora Smoker. */
     productUrl: string;
 }
 
 /**
- * Section immersive : le Flame Duo s'assemble en 3D au fil du scroll,
- * puis les feux s'allument. Repli sur la photo produit sans WebGL.
+ * Section immersive : le fumoir Aurora Smoker s'assemble en 3D au fil du
+ * scroll, puis la fumée s'élève de la cheminée. Repli sur la photo produit
+ * sans WebGL.
  */
-export function FlameDuoScroll({ productUrl }: FlameDuoScrollProps) {
+export function FumoirScroll({ productUrl }: FumoirScrollProps) {
     const wrapRef = useRef<HTMLElement>(null);
     const progressRef = useRef(0);
     const [step, setStep] = useState(0);
@@ -109,12 +110,12 @@ export function FlameDuoScroll({ productUrl }: FlameDuoScrollProps) {
                 <div className="pointer-events-none absolute inset-x-0 top-36 bottom-60 sm:top-40 sm:bottom-56">
                     {webgl ? (
                         <Suspense fallback={null}>
-                            <FlameDuoCanvas progress={progressRef} active={inView} />
+                            <FumoirCanvas progress={progressRef} active={inView} />
                         </Suspense>
                     ) : webgl === false ? (
                         <img
-                            src={siteImages.flame_duo_fallback}
-                            alt="Foyer à gaz Copper Flame Duo"
+                            src={siteImages.fumoir_fallback}
+                            alt="Fumoir Aurora Smoker"
                             className="size-full object-contain p-10"
                         />
                     ) : null}
@@ -126,7 +127,7 @@ export function FlameDuoScroll({ productUrl }: FlameDuoScrollProps) {
                         Fabrication locale
                     </p>
                     <h2 className="mt-3 font-display text-3xl tracking-wide text-smoke-100 uppercase sm:text-6xl">
-                        Le Flame Duo <span className="text-ember-500">prend forme</span>
+                        L'Aurora Smoker <span className="text-ember-500">prend forme</span>
                     </h2>
                 </div>
 
@@ -164,7 +165,7 @@ export function FlameDuoScroll({ productUrl }: FlameDuoScrollProps) {
                             href={productUrl}
                             className="group flex items-center gap-3 rounded-full bg-ember-500 px-8 py-4 text-sm font-bold tracking-wide text-coal-950 uppercase transition-all duration-300 hover:bg-ember-400 hover:shadow-ember"
                         >
-                            Découvrir le Flame Duo
+                            Découvrir l'Aurora Smoker
                             <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
                         </Link>
                     </div>

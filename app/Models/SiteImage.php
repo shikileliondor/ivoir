@@ -38,14 +38,29 @@ class SiteImage extends Model
             'description' => 'Grande image sous le titre de la page d\'accueil.',
             'default' => '/images/1.jpg',
         ],
-        'flame_duo_fallback' => [
-            'label' => 'Photo Flame Duo',
+        'fumoir_fallback' => [
+            'label' => 'Photo Fumoir Aurora',
             'description' => 'Affichée à la place de la scène 3D quand WebGL n\'est pas disponible.',
-            'default' => '/images/flame duo.jpg',
+            'default' => '/images/fumoiraz.webp',
         ],
         'about' => [
             'label' => 'Photo À propos',
             'description' => 'Grande image de la page À propos, à côté de « Notre histoire ».',
+            'default' => null,
+        ],
+        'environment_1' => [
+            'label' => 'Environnement — grande photo',
+            'description' => 'Grande image verticale de la galerie « Sur le terrain » de la page Environnement.',
+            'default' => null,
+        ],
+        'environment_2' => [
+            'label' => 'Environnement — photo 2',
+            'description' => 'Première petite image de la galerie de la page Environnement.',
+            'default' => null,
+        ],
+        'environment_3' => [
+            'label' => 'Environnement — photo 3',
+            'description' => 'Seconde petite image de la galerie de la page Environnement.',
             'default' => null,
         ],
     ];
