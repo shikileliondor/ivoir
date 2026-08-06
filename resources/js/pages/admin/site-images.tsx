@@ -28,14 +28,18 @@ export default function AdminSiteImages({ slots }: { slots: Slot[] }) {
         <>
             <Head title="Images du site" />
 
-            <div className="flex flex-col gap-4 p-4">
-                <div>
-                    <h1 className="text-xl font-semibold">Images du site</h1>
-                    <p className="text-sm text-muted-foreground">
-                        Remplacez les visuels fixes du site (logo, image
-                        d'accueil…). Les images des produits se gèrent dans
-                        « Produits ».
-                    </p>
+            <div className="flex flex-col gap-6 p-6">
+                <div className="flex flex-wrap items-end justify-between gap-4">
+                    <div>
+                        <h1 className="text-2xl font-semibold tracking-tight">
+                            Images du site
+                        </h1>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                            Remplacez les visuels fixes du site (logo, image
+                            d'accueil…). Les images des produits se gèrent dans
+                            « Produits ».
+                        </p>
+                    </div>
                 </div>
 
                 <div className="grid gap-4 lg:grid-cols-3">
@@ -44,9 +48,13 @@ export default function AdminSiteImages({ slots }: { slots: Slot[] }) {
                             <CardHeader>
                                 <CardTitle className="flex items-center justify-between gap-2">
                                     {slot.label}
-                                    {slot.isCustom && (
-                                        <Badge variant="secondary">
+                                    {slot.isCustom ? (
+                                        <Badge variant="ember">
                                             Personnalisée
+                                        </Badge>
+                                    ) : (
+                                        <Badge variant="secondary">
+                                            Par défaut
                                         </Badge>
                                     )}
                                 </CardTitle>
@@ -55,7 +63,7 @@ export default function AdminSiteImages({ slots }: { slots: Slot[] }) {
                                 </p>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                <div className="flex h-40 items-center justify-center overflow-hidden rounded-lg border bg-muted/40 p-2">
+                                <div className="flex h-40 items-center justify-center overflow-hidden rounded-lg border bg-muted p-2">
                                     {slot.url ? (
                                         <img
                                             src={slot.url}
@@ -64,7 +72,7 @@ export default function AdminSiteImages({ slots }: { slots: Slot[] }) {
                                         />
                                     ) : (
                                         <span className="flex flex-col items-center gap-2 text-sm text-muted-foreground">
-                                            <ImageOff className="size-6" />
+                                            <ImageOff className="size-6 opacity-40" />
                                             Aucune image pour l'instant
                                         </span>
                                     )}

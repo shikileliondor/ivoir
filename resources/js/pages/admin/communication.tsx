@@ -123,33 +123,57 @@ export default function AdminCommunication({
         <>
             <Head title="Communication" />
 
-            <div className="flex flex-col gap-4 p-4">
-                <h1 className="text-xl font-semibold">Communication</h1>
+            <div className="flex flex-col gap-6 p-6">
+                <div className="flex flex-wrap items-end justify-between gap-4">
+                    <div>
+                        <h1 className="text-2xl font-semibold tracking-tight">
+                            Communication
+                        </h1>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                            Messages de contact et abonnés à la newsletter.
+                        </p>
+                    </div>
+                </div>
 
-                <div className="grid gap-3 sm:grid-cols-3">
-                    <div className="rounded-xl border p-4">
-                        <p className="text-sm text-muted-foreground">
-                            Messages non lus
-                        </p>
-                        <p className="mt-1 text-2xl font-semibold tabular-nums">
-                            {stats.unreadMessages}
-                        </p>
+                <div className="grid gap-4 sm:grid-cols-3">
+                    <div className="flex items-start justify-between gap-3 rounded-xl border bg-card p-4 shadow-sm">
+                        <div className="min-w-0">
+                            <p className="truncate text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                                Messages non lus
+                            </p>
+                            <p className="mt-2 text-2xl font-semibold tracking-tight tabular-nums">
+                                {stats.unreadMessages}
+                            </p>
+                        </div>
+                        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-ember-500/15 text-ember-600 dark:text-ember-300">
+                            <Mail className="size-4.5" />
+                        </span>
                     </div>
-                    <div className="rounded-xl border p-4">
-                        <p className="text-sm text-muted-foreground">
-                            Messages reçus
-                        </p>
-                        <p className="mt-1 text-2xl font-semibold tabular-nums">
-                            {stats.totalMessages}
-                        </p>
+                    <div className="flex items-start justify-between gap-3 rounded-xl border bg-card p-4 shadow-sm">
+                        <div className="min-w-0">
+                            <p className="truncate text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                                Messages reçus
+                            </p>
+                            <p className="mt-2 text-2xl font-semibold tracking-tight tabular-nums">
+                                {stats.totalMessages}
+                            </p>
+                        </div>
+                        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-teal-500/12 text-teal-700 dark:text-teal-300">
+                            <MailOpen className="size-4.5" />
+                        </span>
                     </div>
-                    <div className="rounded-xl border p-4">
-                        <p className="text-sm text-muted-foreground">
-                            Abonnés newsletter
-                        </p>
-                        <p className="mt-1 text-2xl font-semibold tabular-nums">
-                            {stats.totalSubscribers}
-                        </p>
+                    <div className="flex items-start justify-between gap-3 rounded-xl border bg-card p-4 shadow-sm">
+                        <div className="min-w-0">
+                            <p className="truncate text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                                Abonnés newsletter
+                            </p>
+                            <p className="mt-2 text-2xl font-semibold tracking-tight tabular-nums">
+                                {stats.totalSubscribers}
+                            </p>
+                        </div>
+                        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-violet-500/12 text-violet-600 dark:text-violet-300">
+                            <Users className="size-4.5" />
+                        </span>
                     </div>
                 </div>
 
@@ -162,7 +186,7 @@ export default function AdminCommunication({
                         >
                             <MessageSquare /> Messages
                             {stats.unreadMessages > 0 && (
-                                <Badge className="ml-1">
+                                <Badge variant="ember" className="ml-1">
                                     {stats.unreadMessages}
                                 </Badge>
                             )}
@@ -223,20 +247,20 @@ export default function AdminCommunication({
 
                 {tab === 'messages' ? (
                     <>
-                        <div className="overflow-x-auto rounded-xl border">
+                        <div className="overflow-x-auto rounded-xl border bg-card shadow-sm">
                             <table className="w-full text-sm">
                                 <thead>
-                                    <tr className="border-b bg-muted/50 text-left text-muted-foreground">
-                                        <th className="p-3 font-medium">
+                                    <tr className="border-b bg-muted/60 text-left text-xs tracking-wide text-muted-foreground uppercase">
+                                        <th className="px-4 py-3 font-medium">
                                             Expéditeur
                                         </th>
-                                        <th className="p-3 font-medium">
+                                        <th className="px-4 py-3 font-medium">
                                             Message
                                         </th>
-                                        <th className="p-3 font-medium">
+                                        <th className="px-4 py-3 font-medium">
                                             Reçu le
                                         </th>
-                                        <th className="p-3 text-right font-medium">
+                                        <th className="px-4 py-3 text-right font-medium">
                                             Actions
                                         </th>
                                     </tr>
@@ -246,8 +270,9 @@ export default function AdminCommunication({
                                         <tr>
                                             <td
                                                 colSpan={4}
-                                                className="p-6 text-center text-muted-foreground"
+                                                className="p-10 text-center text-sm text-muted-foreground"
                                             >
+                                                <MessageSquare className="mx-auto mb-2 size-6 opacity-40" />
                                                 Aucun message.
                                             </td>
                                         </tr>
@@ -255,17 +280,11 @@ export default function AdminCommunication({
                                     {messages.data.map((message) => (
                                         <tr
                                             key={message.id}
-                                            className="cursor-pointer border-b last:border-0 hover:bg-muted/40"
+                                            className="cursor-pointer border-b transition-colors last:border-0 hover:bg-muted/40"
                                             onClick={() => openMessage(message)}
                                         >
-                                            <td className="p-3">
+                                            <td className="px-4 py-3">
                                                 <span className="flex items-center gap-2">
-                                                    {!message.isRead && (
-                                                        <span
-                                                            className="size-2 shrink-0 rounded-full bg-primary"
-                                                            aria-label="Non lu"
-                                                        />
-                                                    )}
                                                     <span
                                                         className={
                                                             message.isRead
@@ -275,6 +294,15 @@ export default function AdminCommunication({
                                                     >
                                                         {message.name}
                                                     </span>
+                                                    {message.isRead ? (
+                                                        <Badge variant="outline">
+                                                            Lu
+                                                        </Badge>
+                                                    ) : (
+                                                        <Badge variant="ember">
+                                                            Non lu
+                                                        </Badge>
+                                                    )}
                                                 </span>
                                                 <span className="mt-0.5 block text-xs text-muted-foreground">
                                                     {message.phone}
@@ -283,15 +311,15 @@ export default function AdminCommunication({
                                                         : ''}
                                                 </span>
                                             </td>
-                                            <td className="max-w-md p-3 text-muted-foreground">
+                                            <td className="max-w-md px-4 py-3 text-muted-foreground">
                                                 <span className="line-clamp-2">
                                                     {message.message}
                                                 </span>
                                             </td>
-                                            <td className="p-3 whitespace-nowrap text-muted-foreground">
+                                            <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
                                                 {formatDate(message.createdAt)}
                                             </td>
-                                            <td className="p-3">
+                                            <td className="px-4 py-3">
                                                 <span className="flex justify-end gap-1">
                                                     <Button
                                                         variant="ghost"
@@ -348,17 +376,17 @@ export default function AdminCommunication({
                     </>
                 ) : (
                     <>
-                        <div className="overflow-x-auto rounded-xl border">
+                        <div className="overflow-x-auto rounded-xl border bg-card shadow-sm">
                             <table className="w-full text-sm">
                                 <thead>
-                                    <tr className="border-b bg-muted/50 text-left text-muted-foreground">
-                                        <th className="p-3 font-medium">
+                                    <tr className="border-b bg-muted/60 text-left text-xs tracking-wide text-muted-foreground uppercase">
+                                        <th className="px-4 py-3 font-medium">
                                             Email
                                         </th>
-                                        <th className="p-3 font-medium">
+                                        <th className="px-4 py-3 font-medium">
                                             Inscrit le
                                         </th>
-                                        <th className="p-3 text-right font-medium">
+                                        <th className="px-4 py-3 text-right font-medium">
                                             Actions
                                         </th>
                                     </tr>
@@ -368,8 +396,9 @@ export default function AdminCommunication({
                                         <tr>
                                             <td
                                                 colSpan={3}
-                                                className="p-6 text-center text-muted-foreground"
+                                                className="p-10 text-center text-sm text-muted-foreground"
                                             >
+                                                <Users className="mx-auto mb-2 size-6 opacity-40" />
                                                 Aucun abonné.
                                             </td>
                                         </tr>
@@ -377,9 +406,9 @@ export default function AdminCommunication({
                                     {subscribers.data.map((subscriber) => (
                                         <tr
                                             key={subscriber.id}
-                                            className="border-b last:border-0"
+                                            className="border-b transition-colors last:border-0 hover:bg-muted/40"
                                         >
-                                            <td className="p-3 font-medium">
+                                            <td className="px-4 py-3 font-medium">
                                                 <a
                                                     href={`mailto:${subscriber.email}`}
                                                     className="hover:underline"
@@ -387,12 +416,12 @@ export default function AdminCommunication({
                                                     {subscriber.email}
                                                 </a>
                                             </td>
-                                            <td className="p-3 text-muted-foreground">
+                                            <td className="px-4 py-3 text-muted-foreground">
                                                 {formatDate(
                                                     subscriber.createdAt,
                                                 )}
                                             </td>
-                                            <td className="p-3">
+                                            <td className="px-4 py-3">
                                                 <span className="flex justify-end">
                                                     <Button
                                                         variant="ghost"

@@ -39,8 +39,8 @@ export default function AdminOrderShow({ order }: { order: AdminOrderDetail }) {
         <>
             <Head title={`Commande ${order.reference}`} />
 
-            <div className="flex flex-col gap-4 p-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-col gap-6 p-6">
+                <div className="flex flex-wrap items-end justify-between gap-4">
                     <div className="flex items-center gap-3">
                         <Button asChild variant="ghost" size="icon">
                             <Link
@@ -51,10 +51,10 @@ export default function AdminOrderShow({ order }: { order: AdminOrderDetail }) {
                             </Link>
                         </Button>
                         <div>
-                            <h1 className="text-xl font-semibold">
+                            <h1 className="text-2xl font-semibold tracking-tight">
                                 {order.reference}
                             </h1>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="mt-1 text-sm text-muted-foreground">
                                 Passée le {formatDate(order.createdAt)}
                             </p>
                         </div>
@@ -93,61 +93,63 @@ export default function AdminOrderShow({ order }: { order: AdminOrderDetail }) {
                             <CardTitle>Articles</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <table className="w-full text-sm">
-                                <thead>
-                                    <tr className="border-b text-left text-muted-foreground">
-                                        <th className="pb-2 font-medium">
-                                            Produit
-                                        </th>
-                                        <th className="pb-2 font-medium">
-                                            Prix unitaire
-                                        </th>
-                                        <th className="pb-2 font-medium">
-                                            Qté
-                                        </th>
-                                        <th className="pb-2 text-right font-medium">
-                                            Sous-total
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {order.items.map((item, index) => (
-                                        <tr
-                                            key={index}
-                                            className="border-b last:border-0"
-                                        >
-                                            <td className="py-2 font-medium">
-                                                {item.productName}
+                            <div className="overflow-x-auto rounded-xl border">
+                                <table className="w-full text-sm">
+                                    <thead>
+                                        <tr className="border-b bg-muted/60 text-left text-xs tracking-wide text-muted-foreground uppercase">
+                                            <th className="px-4 py-3 font-medium">
+                                                Produit
+                                            </th>
+                                            <th className="px-4 py-3 font-medium">
+                                                Prix unitaire
+                                            </th>
+                                            <th className="px-4 py-3 font-medium">
+                                                Qté
+                                            </th>
+                                            <th className="px-4 py-3 text-right font-medium">
+                                                Sous-total
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {order.items.map((item, index) => (
+                                            <tr
+                                                key={index}
+                                                className="border-b transition-colors last:border-0 hover:bg-muted/40"
+                                            >
+                                                <td className="px-4 py-3 font-medium">
+                                                    {item.productName}
+                                                </td>
+                                                <td className="px-4 py-3 tabular-nums">
+                                                    {formatFcfa(item.unitPrice)}
+                                                </td>
+                                                <td className="px-4 py-3 tabular-nums">
+                                                    {item.quantity}
+                                                </td>
+                                                <td className="px-4 py-3 text-right tabular-nums">
+                                                    {formatFcfa(
+                                                        item.unitPrice *
+                                                            item.quantity,
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                    <tfoot>
+                                        <tr className="border-t bg-muted/40">
+                                            <td
+                                                colSpan={3}
+                                                className="px-4 py-3 font-medium"
+                                            >
+                                                Total
                                             </td>
-                                            <td className="py-2 tabular-nums">
-                                                {formatFcfa(item.unitPrice)}
-                                            </td>
-                                            <td className="py-2 tabular-nums">
-                                                {item.quantity}
-                                            </td>
-                                            <td className="py-2 text-right tabular-nums">
-                                                {formatFcfa(
-                                                    item.unitPrice *
-                                                        item.quantity,
-                                                )}
+                                            <td className="px-4 py-3 text-right text-lg font-semibold tabular-nums text-ember-600 dark:text-ember-300">
+                                                {formatFcfa(order.total)}
                                             </td>
                                         </tr>
-                                    ))}
-                                </tbody>
-                                <tfoot>
-                                    <tr>
-                                        <td
-                                            colSpan={3}
-                                            className="pt-3 font-medium"
-                                        >
-                                            Total
-                                        </td>
-                                        <td className="pt-3 text-right text-base font-semibold tabular-nums">
-                                            {formatFcfa(order.total)}
-                                        </td>
-                                    </tr>
-                                </tfoot>
-                            </table>
+                                    </tfoot>
+                                </table>
+                            </div>
                         </CardContent>
                     </Card>
 

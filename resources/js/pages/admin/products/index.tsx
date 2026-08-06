@@ -1,5 +1,5 @@
 import { Form, Head, Link } from '@inertiajs/react';
-import { Flame, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Flame, PackageOpen, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import ProductController from '@/actions/App/Http/Controllers/Admin/ProductController';
 import { Badge } from '@/components/ui/badge';
@@ -28,9 +28,16 @@ export default function AdminProducts({
         <>
             <Head title="Produits" />
 
-            <div className="flex flex-col gap-4 p-4">
-                <div className="flex items-center justify-between">
-                    <h1 className="text-xl font-semibold">Produits</h1>
+            <div className="flex flex-col gap-6 p-6">
+                <div className="flex flex-wrap items-end justify-between gap-4">
+                    <div>
+                        <h1 className="text-2xl font-semibold tracking-tight">
+                            Produits
+                        </h1>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                            Gérez le catalogue de la boutique.
+                        </p>
+                    </div>
                     <Button asChild>
                         <Link href={products.create()}>
                             <Plus /> Nouveau produit
@@ -38,15 +45,21 @@ export default function AdminProducts({
                     </Button>
                 </div>
 
-                <div className="overflow-x-auto rounded-xl border">
+                <div className="overflow-x-auto rounded-xl border bg-card shadow-sm">
                     <table className="w-full text-sm">
                         <thead>
-                            <tr className="border-b bg-muted/50 text-left text-muted-foreground">
-                                <th className="p-3 font-medium">Produit</th>
-                                <th className="p-3 font-medium">Catégorie</th>
-                                <th className="p-3 font-medium">Prix</th>
-                                <th className="p-3 font-medium">Statut</th>
-                                <th className="p-3 text-right font-medium">
+                            <tr className="border-b bg-muted/60 text-left text-xs tracking-wide text-muted-foreground uppercase">
+                                <th className="px-4 py-3 font-medium">
+                                    Produit
+                                </th>
+                                <th className="px-4 py-3 font-medium">
+                                    Catégorie
+                                </th>
+                                <th className="px-4 py-3 font-medium">Prix</th>
+                                <th className="px-4 py-3 font-medium">
+                                    Statut
+                                </th>
+                                <th className="px-4 py-3 text-right font-medium">
                                     Actions
                                 </th>
                             </tr>
@@ -56,8 +69,9 @@ export default function AdminProducts({
                                 <tr>
                                     <td
                                         colSpan={5}
-                                        className="p-6 text-center text-muted-foreground"
+                                        className="p-10 text-center text-sm text-muted-foreground"
                                     >
+                                        <PackageOpen className="mx-auto mb-2 size-6 opacity-40" />
                                         Aucun produit. Créez le premier !
                                     </td>
                                 </tr>
@@ -65,11 +79,11 @@ export default function AdminProducts({
                             {rows.map((product) => (
                                 <tr
                                     key={product.id}
-                                    className="border-b last:border-0"
+                                    className="border-b transition-colors last:border-0 hover:bg-muted/40"
                                 >
-                                    <td className="p-3">
+                                    <td className="px-4 py-3">
                                         <span className="flex items-center gap-3">
-                                            <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted">
+                                            <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-muted">
                                                 {product.image ? (
                                                     <img
                                                         src={product.image}
@@ -85,10 +99,10 @@ export default function AdminProducts({
                                             </span>
                                         </span>
                                     </td>
-                                    <td className="p-3 text-muted-foreground">
+                                    <td className="px-4 py-3 text-muted-foreground">
                                         {product.category}
                                     </td>
-                                    <td className="p-3 tabular-nums">
+                                    <td className="px-4 py-3 tabular-nums">
                                         {product.currentPrice !==
                                         product.price ? (
                                             <span className="flex flex-col">
@@ -105,7 +119,7 @@ export default function AdminProducts({
                                             formatFcfa(product.price)
                                         )}
                                     </td>
-                                    <td className="p-3">
+                                    <td className="px-4 py-3">
                                         <span className="flex flex-wrap gap-1">
                                             {!product.isActive && (
                                                 <Badge variant="secondary">
@@ -113,19 +127,19 @@ export default function AdminProducts({
                                                 </Badge>
                                             )}
                                             {product.isActive && (
-                                                <Badge variant="outline">
+                                                <Badge variant="success">
                                                     Actif
                                                 </Badge>
                                             )}
                                             {product.isFeatured && (
-                                                <Badge variant="secondary">
+                                                <Badge variant="ember">
                                                     Vedette
                                                 </Badge>
                                             )}
                                             {product.promoLabel !== null ||
                                             product.currentPrice !==
                                                 product.price ? (
-                                                <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                                                <Badge variant="ember">
                                                     {product.promoLabel ??
                                                         'Promo'}
                                                 </Badge>
@@ -143,7 +157,7 @@ export default function AdminProducts({
                                                 )}
                                         </span>
                                     </td>
-                                    <td className="p-3">
+                                    <td className="px-4 py-3">
                                         <span className="flex justify-end gap-1">
                                             <Button
                                                 asChild

@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { Search } from 'lucide-react';
+import { Inbox, Search } from 'lucide-react';
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -41,8 +41,17 @@ export default function AdminOrders({
         <>
             <Head title="Commandes" />
 
-            <div className="flex flex-col gap-4 p-4">
-                <h1 className="text-xl font-semibold">Commandes</h1>
+            <div className="flex flex-col gap-6 p-6">
+                <div className="flex flex-wrap items-end justify-between gap-4">
+                    <div>
+                        <h1 className="text-2xl font-semibold tracking-tight">
+                            Commandes
+                        </h1>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                            Suivez et gérez les commandes de vos clients.
+                        </p>
+                    </div>
+                </div>
 
                 <div className="flex flex-wrap items-center gap-2">
                     <form
@@ -86,17 +95,17 @@ export default function AdminOrders({
                     </div>
                 </div>
 
-                <div className="overflow-x-auto rounded-xl border">
+                <div className="overflow-x-auto rounded-xl border bg-card shadow-sm">
                     <table className="w-full text-sm">
                         <thead>
-                            <tr className="border-b bg-muted/50 text-left text-muted-foreground">
-                                <th className="p-3 font-medium">Référence</th>
-                                <th className="p-3 font-medium">Client</th>
-                                <th className="p-3 font-medium">Ville</th>
-                                <th className="p-3 font-medium">Articles</th>
-                                <th className="p-3 font-medium">Total</th>
-                                <th className="p-3 font-medium">Statut</th>
-                                <th className="p-3 font-medium">Date</th>
+                            <tr className="border-b bg-muted/60 text-left text-xs tracking-wide text-muted-foreground uppercase">
+                                <th className="px-4 py-3 font-medium">Référence</th>
+                                <th className="px-4 py-3 font-medium">Client</th>
+                                <th className="px-4 py-3 font-medium">Ville</th>
+                                <th className="px-4 py-3 font-medium">Articles</th>
+                                <th className="px-4 py-3 font-medium">Total</th>
+                                <th className="px-4 py-3 font-medium">Statut</th>
+                                <th className="px-4 py-3 font-medium">Date</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -104,8 +113,9 @@ export default function AdminOrders({
                                 <tr>
                                     <td
                                         colSpan={7}
-                                        className="p-6 text-center text-muted-foreground"
+                                        className="p-10 text-center text-sm text-muted-foreground"
                                     >
+                                        <Inbox className="mx-auto mb-2 size-6 opacity-40" />
                                         Aucune commande trouvée.
                                     </td>
                                 </tr>
@@ -113,7 +123,7 @@ export default function AdminOrders({
                             {page.data.map((order) => (
                                 <tr
                                     key={order.reference}
-                                    className="cursor-pointer border-b last:border-0 hover:bg-muted/40"
+                                    className="cursor-pointer border-b transition-colors last:border-0 hover:bg-muted/40"
                                     onClick={() =>
                                         router.visit(
                                             orders.show.url({
@@ -122,7 +132,7 @@ export default function AdminOrders({
                                         )
                                     }
                                 >
-                                    <td className="p-3">
+                                    <td className="px-4 py-3">
                                         <Link
                                             href={orders.show.url({
                                                 order: order.reference,
@@ -135,7 +145,7 @@ export default function AdminOrders({
                                             {order.reference}
                                         </Link>
                                     </td>
-                                    <td className="p-3">
+                                    <td className="px-4 py-3">
                                         <span className="block">
                                             {order.customerName}
                                         </span>
@@ -143,16 +153,16 @@ export default function AdminOrders({
                                             {order.customerPhone}
                                         </span>
                                     </td>
-                                    <td className="p-3 text-muted-foreground">
+                                    <td className="px-4 py-3 text-muted-foreground">
                                         {order.city}
                                     </td>
-                                    <td className="p-3 text-muted-foreground tabular-nums">
+                                    <td className="px-4 py-3 text-muted-foreground tabular-nums">
                                         {order.itemsCount}
                                     </td>
-                                    <td className="p-3 font-medium tabular-nums">
+                                    <td className="px-4 py-3 font-medium tabular-nums">
                                         {formatFcfa(order.total)}
                                     </td>
-                                    <td className="p-3">
+                                    <td className="px-4 py-3">
                                         <Badge
                                             className={
                                                 ORDER_STATUS_CLASSES[
@@ -165,7 +175,7 @@ export default function AdminOrders({
                                             ] ?? order.status}
                                         </Badge>
                                     </td>
-                                    <td className="p-3 text-muted-foreground">
+                                    <td className="px-4 py-3 text-muted-foreground">
                                         {formatDate(order.createdAt)}
                                     </td>
                                 </tr>

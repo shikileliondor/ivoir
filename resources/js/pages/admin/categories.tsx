@@ -1,8 +1,9 @@
 import { Form, Head } from '@inertiajs/react';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { Pencil, Plus, Tags, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import CategoryController from '@/actions/App/Http/Controllers/Admin/CategoryController';
 import InputError from '@/components/input-error';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -30,10 +31,20 @@ export default function AdminCategories({
         <>
             <Head title="Catégories" />
 
-            <div className="flex flex-col gap-4 p-4">
-                <h1 className="text-xl font-semibold">Catégories</h1>
+            <div className="flex flex-col gap-6 p-6">
+                <div className="flex flex-wrap items-end justify-between gap-4">
+                    <div>
+                        <h1 className="text-2xl font-semibold tracking-tight">
+                            Catégories
+                        </h1>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                            Organisez les produits de la boutique par
+                            catégorie.
+                        </p>
+                    </div>
+                </div>
 
-                <div className="max-w-xl rounded-xl border p-4">
+                <div className="max-w-xl rounded-xl border bg-card p-4 shadow-sm">
                     <Form
                         {...CategoryController.store.form()}
                         options={{ preserveScroll: true }}
@@ -60,30 +71,48 @@ export default function AdminCategories({
                     </Form>
                 </div>
 
-                <div className="max-w-xl overflow-hidden rounded-xl border">
+                <div className="max-w-xl overflow-x-auto rounded-xl border bg-card shadow-sm">
                     <table className="w-full text-sm">
                         <thead>
-                            <tr className="border-b bg-muted/50 text-left text-muted-foreground">
-                                <th className="p-3 font-medium">Nom</th>
-                                <th className="p-3 font-medium">Produits</th>
-                                <th className="p-3 text-right font-medium">
+                            <tr className="border-b bg-muted/60 text-left text-xs tracking-wide text-muted-foreground uppercase">
+                                <th className="px-4 py-3 font-medium">Nom</th>
+                                <th className="px-4 py-3 font-medium">
+                                    Produits
+                                </th>
+                                <th className="px-4 py-3 text-right font-medium">
                                     Actions
                                 </th>
                             </tr>
                         </thead>
                         <tbody>
+                            {rows.length === 0 && (
+                                <tr>
+                                    <td
+                                        colSpan={3}
+                                        className="p-10 text-center text-sm text-muted-foreground"
+                                    >
+                                        <Tags className="mx-auto mb-2 size-6 opacity-40" />
+                                        Aucune catégorie pour le moment.
+                                    </td>
+                                </tr>
+                            )}
                             {rows.map((category) => (
                                 <tr
                                     key={category.id}
-                                    className="border-b last:border-0"
+                                    className="border-b transition-colors last:border-0 hover:bg-muted/40"
                                 >
-                                    <td className="p-3 font-medium">
+                                    <td className="px-4 py-3 font-medium">
                                         {category.name}
                                     </td>
-                                    <td className="p-3 text-muted-foreground tabular-nums">
-                                        {category.productsCount}
+                                    <td className="px-4 py-3">
+                                        <Badge
+                                            variant="outline"
+                                            className="tabular-nums"
+                                        >
+                                            {category.productsCount}
+                                        </Badge>
                                     </td>
-                                    <td className="p-3">
+                                    <td className="px-4 py-3">
                                         <span className="flex justify-end gap-1">
                                             <Button
                                                 variant="ghost"

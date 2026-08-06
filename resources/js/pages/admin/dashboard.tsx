@@ -1,4 +1,13 @@
 import { Head, Link } from '@inertiajs/react';
+import {
+    BadgePercent,
+    Banknote,
+    CalendarRange,
+    Clock3,
+    ShoppingCart,
+    Users,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -43,16 +52,16 @@ const SERIES = [
     {
         key: 'visitors' as const,
         label: 'Visiteurs',
-        className: 'stroke-[#2a78d6] dark:stroke-[#3987e5]',
-        dotClassName: 'bg-[#2a78d6] dark:bg-[#3987e5]',
-        fillClassName: 'fill-[#2a78d6] dark:fill-[#3987e5]',
+        className: 'stroke-ember-500 dark:stroke-ember-400',
+        dotClassName: 'bg-ember-500 dark:bg-ember-400',
+        fillClassName: 'fill-ember-500 dark:fill-ember-400',
     },
     {
         key: 'pageViews' as const,
         label: 'Pages vues',
-        className: 'stroke-[#1baf7a] dark:stroke-[#199e70]',
-        dotClassName: 'bg-[#1baf7a] dark:bg-[#199e70]',
-        fillClassName: 'fill-[#1baf7a] dark:fill-[#199e70]',
+        className: 'stroke-teal-600 dark:stroke-teal-400',
+        dotClassName: 'bg-teal-600 dark:bg-teal-400',
+        fillClassName: 'fill-teal-600 dark:fill-teal-400',
     },
 ];
 
@@ -235,16 +244,33 @@ function VisitsChart({ data }: { data: VisitPoint[] }) {
     );
 }
 
-function StatCard({ label, value }: { label: string; value: string }) {
+function StatCard({
+    label,
+    value,
+    icon: Icon,
+    chipClass,
+}: {
+    label: string;
+    value: string;
+    icon: LucideIcon;
+    chipClass: string;
+}) {
     return (
-        <Card className="gap-1 py-4">
-            <CardHeader className="px-4">
-                <CardTitle className="text-sm font-normal text-muted-foreground">
-                    {label}
-                </CardTitle>
-            </CardHeader>
-            <CardContent className="px-4">
-                <p className="text-2xl font-semibold">{value}</p>
+        <Card className="py-4">
+            <CardContent className="flex items-start justify-between gap-3 px-4">
+                <div className="min-w-0">
+                    <p className="truncate text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                        {label}
+                    </p>
+                    <p className="mt-2 text-2xl font-semibold tracking-tight tabular-nums">
+                        {value}
+                    </p>
+                </div>
+                <span
+                    className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${chipClass}`}
+                >
+                    <Icon className="size-4.5" />
+                </span>
             </CardContent>
         </Card>
     );
@@ -265,31 +291,52 @@ export default function AdminDashboard({
         <>
             <Head title="Administration" />
 
-            <div className="flex flex-col gap-4 p-4">
+            <div className="flex flex-col gap-6 p-6">
+                <div>
+                    <h1 className="text-2xl font-semibold tracking-tight">
+                        Tableau de bord
+                    </h1>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                        Vue d'ensemble de la boutique IvoirCuisson.
+                    </p>
+                </div>
+
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
                     <StatCard
                         label="Commandes aujourd'hui"
                         value={String(stats.ordersToday)}
+                        icon={ShoppingCart}
+                        chipClass="bg-blue-500/12 text-blue-600 dark:text-blue-300"
                     />
                     <StatCard
                         label="Commandes ce mois"
                         value={String(stats.ordersMonth)}
+                        icon={CalendarRange}
+                        chipClass="bg-teal-500/12 text-teal-700 dark:text-teal-300"
                     />
                     <StatCard
                         label="CA du mois"
                         value={formatFcfa(stats.revenueMonth)}
+                        icon={Banknote}
+                        chipClass="bg-ember-500/15 text-ember-600 dark:text-ember-300"
                     />
                     <StatCard
                         label="En attente"
                         value={String(stats.pendingOrders)}
+                        icon={Clock3}
+                        chipClass="bg-amber-400/20 text-amber-700 dark:text-amber-300"
                     />
                     <StatCard
                         label="Visiteurs aujourd'hui"
                         value={String(stats.visitorsToday)}
+                        icon={Users}
+                        chipClass="bg-violet-500/12 text-violet-600 dark:text-violet-300"
                     />
                     <StatCard
                         label="Promos actives"
                         value={String(stats.activePromos)}
+                        icon={BadgePercent}
+                        chipClass="bg-rose-500/12 text-rose-600 dark:text-rose-300"
                     />
                 </div>
 
@@ -314,13 +361,18 @@ export default function AdminDashboard({
                                 </p>
                             ) : (
                                 <ul className="divide-y">
-                                    {topProducts.map((product) => (
+                                    {topProducts.map((product, index) => (
                                         <li
                                             key={product.name}
-                                            className="flex items-center justify-between py-2 text-sm"
+                                            className="flex items-center gap-3 py-2.5 text-sm"
                                         >
-                                            <span>{product.name}</span>
-                                            <span className="text-muted-foreground tabular-nums">
+                                            <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-ember-500/12 font-display text-sm text-ember-600 dark:text-ember-300">
+                                                {index + 1}
+                                            </span>
+                                            <span className="min-w-0 flex-1 truncate font-medium">
+                                                {product.name}
+                                            </span>
+                                            <span className="shrink-0 text-muted-foreground tabular-nums">
                                                 {product.quantity} vendus ·{' '}
                                                 {formatFcfa(product.revenue)}
                                             </span>
@@ -348,7 +400,7 @@ export default function AdminDashboard({
                                                 href={orders.show.url({
                                                     order: order.reference,
                                                 })}
-                                                className="flex items-center justify-between gap-3 py-2 text-sm hover:bg-muted/50"
+                                                className="-mx-2 flex items-center justify-between gap-3 rounded-lg px-2 py-2 text-sm transition-colors hover:bg-muted/60"
                                             >
                                                 <span className="min-w-0">
                                                     <span className="block truncate font-medium">

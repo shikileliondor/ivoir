@@ -53,18 +53,25 @@ function AdminNav({ items }: { items: NavItem[] }) {
 
     return (
         <SidebarGroup className="px-2 py-0">
-            <SidebarGroupLabel>Gestion</SidebarGroupLabel>
-            <SidebarMenu>
+            <SidebarGroupLabel className="text-[11px] tracking-[0.18em] text-sidebar-foreground/45 uppercase">
+                Gestion
+            </SidebarGroupLabel>
+            <SidebarMenu className="gap-1">
                 {items.map((item) => (
                     <SidebarMenuItem key={item.title}>
                         <SidebarMenuButton
                             asChild
                             isActive={isCurrentUrl(item.href)}
                             tooltip={{ children: item.title }}
+                            className="group/nav relative h-9 rounded-lg text-sidebar-foreground/75 transition-colors hover:bg-white/5 hover:text-sidebar-foreground data-[active=true]:bg-ember-500/15 data-[active=true]:text-ember-300 [&>svg]:text-sidebar-foreground/50 data-[active=true]:[&>svg]:text-ember-400"
                         >
                             <Link href={item.href} prefetch>
                                 {item.icon && <item.icon />}
                                 <span>{item.title}</span>
+                                <span
+                                    aria-hidden
+                                    className="absolute inset-y-2 left-0 hidden w-[3px] rounded-full bg-ember-500 group-data-[active=true]/nav:block"
+                                />
                             </Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>

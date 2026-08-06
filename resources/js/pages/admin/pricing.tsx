@@ -1,5 +1,5 @@
 import { Form, Head } from '@inertiajs/react';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { CalendarClock, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import PricePeriodController from '@/actions/App/Http/Controllers/Admin/PricePeriodController';
 import InputError from '@/components/input-error';
@@ -36,10 +36,13 @@ const STATUS_LABELS: Record<PricePeriodRow['status'], string> = {
     expired: 'Expirée',
 };
 
-const STATUS_CLASSES: Record<PricePeriodRow['status'], string> = {
-    active: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300',
-    upcoming: 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300',
-    expired: 'bg-muted text-muted-foreground',
+const STATUS_VARIANTS: Record<
+    PricePeriodRow['status'],
+    'success' | 'ember' | 'secondary'
+> = {
+    active: 'success',
+    upcoming: 'ember',
+    expired: 'secondary',
 };
 
 function toLocalInput(iso: string): string {
@@ -157,13 +160,13 @@ export default function AdminPricing({
         <>
             <Head title="Tarification" />
 
-            <div className="flex flex-col gap-4 p-4">
-                <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-6 p-6">
+                <div className="flex flex-wrap items-end justify-between gap-4">
                     <div>
-                        <h1 className="text-xl font-semibold">
+                        <h1 className="text-2xl font-semibold tracking-tight">
                             Tarification par périodes
                         </h1>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="mt-1 text-sm text-muted-foreground">
                             Un prix promotionnel remplace le prix de base
                             pendant la période choisie, puis le produit revient
                             automatiquement à son prix de base.
@@ -174,16 +177,26 @@ export default function AdminPricing({
                     </Button>
                 </div>
 
-                <div className="overflow-x-auto rounded-xl border">
+                <div className="overflow-x-auto rounded-xl border bg-card shadow-sm">
                     <table className="w-full text-sm">
                         <thead>
-                            <tr className="border-b bg-muted/50 text-left text-muted-foreground">
-                                <th className="p-3 font-medium">Produit</th>
-                                <th className="p-3 font-medium">Libellé</th>
-                                <th className="p-3 font-medium">Prix promo</th>
-                                <th className="p-3 font-medium">Période</th>
-                                <th className="p-3 font-medium">Statut</th>
-                                <th className="p-3 text-right font-medium">
+                            <tr className="border-b bg-muted/60 text-left text-xs tracking-wide text-muted-foreground uppercase">
+                                <th className="px-4 py-3 font-medium">
+                                    Produit
+                                </th>
+                                <th className="px-4 py-3 font-medium">
+                                    Libellé
+                                </th>
+                                <th className="px-4 py-3 font-medium">
+                                    Prix promo
+                                </th>
+                                <th className="px-4 py-3 font-medium">
+                                    Période
+                                </th>
+                                <th className="px-4 py-3 font-medium">
+                                    Statut
+                                </th>
+                                <th className="px-4 py-3 text-right font-medium">
                                     Actions
                                 </th>
                             </tr>
@@ -193,8 +206,9 @@ export default function AdminPricing({
                                 <tr>
                                     <td
                                         colSpan={6}
-                                        className="p-6 text-center text-muted-foreground"
+                                        className="p-10 text-center text-sm text-muted-foreground"
                                     >
+                                        <CalendarClock className="mx-auto mb-2 size-6 opacity-40" />
                                         Aucune période tarifaire. Créez la
                                         première !
                                     </td>
@@ -203,15 +217,15 @@ export default function AdminPricing({
                             {periods.map((period) => (
                                 <tr
                                     key={period.id}
-                                    className="border-b last:border-0"
+                                    className="border-b transition-colors last:border-0 hover:bg-muted/40"
                                 >
-                                    <td className="p-3 font-medium">
+                                    <td className="px-4 py-3 font-medium">
                                         {period.product.name}
                                     </td>
-                                    <td className="p-3 text-muted-foreground">
+                                    <td className="px-4 py-3 text-muted-foreground">
                                         {period.label ?? '—'}
                                     </td>
-                                    <td className="p-3 tabular-nums">
+                                    <td className="px-4 py-3 tabular-nums">
                                         <span className="flex flex-col">
                                             <span className="font-medium">
                                                 {formatFcfa(period.price)}
@@ -223,20 +237,20 @@ export default function AdminPricing({
                                             </span>
                                         </span>
                                     </td>
-                                    <td className="p-3 text-muted-foreground">
+                                    <td className="px-4 py-3 text-muted-foreground">
                                         {formatDate(period.startsAt)} →{' '}
                                         {formatDate(period.endsAt)}
                                     </td>
-                                    <td className="p-3">
+                                    <td className="px-4 py-3">
                                         <Badge
-                                            className={
-                                                STATUS_CLASSES[period.status]
+                                            variant={
+                                                STATUS_VARIANTS[period.status]
                                             }
                                         >
                                             {STATUS_LABELS[period.status]}
                                         </Badge>
                                     </td>
-                                    <td className="p-3">
+                                    <td className="px-4 py-3">
                                         <span className="flex justify-end gap-1">
                                             <Button
                                                 variant="ghost"
