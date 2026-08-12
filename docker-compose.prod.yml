@@ -1,13 +1,22 @@
 # Environnement de production : image autoportante (nginx + php-fpm + assets
 # Vite déjà buildés), avec worker de queue et scheduler séparés.
 #
-#   docker compose -f docker-compose.prod.yml up -d --build
+# L'image est construite par GitHub Actions et publiée sur GHCR — le VPS ne fait
+# que la tirer. Il n'a que ~2,7 Gi de marge mémoire et héberge déjà deux sites en
+# production : un build de Vite sur place risquerait de déclencher l'OOM killer
+# sur les conteneurs voisins.
+#
+#   VPS   : docker compose -f docker-compose.prod.yml pull app && up -d
+#   Local : docker compose -f docker-compose.prod.yml up -d --build
+#
+# IVOIR_IMAGE permet d'épingler un SHA précis pour revenir en arrière :
+#   IVOIR_IMAGE=ghcr.io/shikileliondor/ivoir-app:<sha> docker compose ... up -d
 services:
     app:
         build:
             context: '.'
             dockerfile: 'docker/app/Dockerfile'
-        image: 'ivoir-app'
+        image: '${IVOIR_IMAGE:-ghcr.io/shikileliondor/ivoir-app:latest}'
         ports:
             - '${APP_PROD_PORT:-8086}:80'
         volumes:
@@ -23,7 +32,7 @@ services:
         restart: unless-stopped
 
     queue:
-        image: 'ivoir-app'
+        image: '${IVOIR_IMAGE:-ghcr.io/shikileliondor/ivoir-app:latest}'
         command: ['php', '/var/www/html/artisan', 'queue:work', '--sleep=3', '--tries=3', '--max-time=3600']
         volumes:
             - './.env:/var/www/html/.env:ro'
@@ -35,7 +44,7 @@ services:
         restart: unless-stopped
 
     scheduler:
-        image: 'ivoir-app'
+        image: '${IVOIR_IMAGE:-ghcr.io/shikileliondor/ivoir-app:latest}'
         command: ['/bin/sh', '-c', 'while true; do php /var/www/html/artisan schedule:run --verbose --no-interaction; sleep 60; done']
         volumes:
             - './.env:/var/www/html/.env:ro'

@@ -39,7 +39,8 @@ Tous les ports viennent de `.env` (`APP_PORT`, `VITE_PORT`, `FORWARD_DB_PORT`, `
 
 Un seul workflow : `.github/workflows/deploy.yml`, sur push `master` ou `workflow_dispatch`. Il n'y a **plus de workflow de lint ni de tests** — `composer test` en local est le seul garde-fou.
 
-- Le runner ne build rien : il se connecte en SSH et le VPS fait tout (`git pull` → `up -d --build` → attente `healthy` → `migrate --force` → `image prune`). Le Dockerfile compile le front lui-même, pas besoin de rsync d'assets.
+- **Le VPS ne compile rien.** Le runner GitHub build l'image et la publie sur `ghcr.io/shikileliondor/ivoir-app` (tags `:latest` et `:<sha>`) ; le VPS fait `git pull` → `pull app` → `up -d` → attente `healthy` → `migrate --force` → `prune`. Le VPS n'a que ~2,7 Gi de marge et héberge lokea et dymora_app : un build de Vite sur place pourrait faire tuer *leurs* conteneurs par l'OOM killer.
+- Rollback sans rebuild : `IVOIR_IMAGE=ghcr.io/shikileliondor/ivoir-app:<sha> docker compose -f docker-compose.prod.yml up -d`.
 - Sur le VPS, toujours `docker-compose.prod.yml`, jamais `docker-compose.yml`.
 - Toute commande artisan en prod : `exec -T --user www-data app`. Sans `--user www-data` les fichiers appartiennent à root et PHP-FPM ne peut plus écrire dans `storage/` ; sans `-T` la commande bloque faute de TTY.
 - Ne pas ajouter de `config:cache`/`route:cache`/`view:cache` au déploiement : `start.sh` lance déjà `artisan optimize` à chaque démarrage, une fois le vrai `.env` monté.

@@ -4,7 +4,8 @@
 > **Serveur** : le VPS Contabo qui héberge déjà lokea, Odoo et Renkya (`156.67.28.90`)
 > **Adresse** : un vrai domaine (+ HTTPS via Certbot)
 > **Stack** : Laravel 13 + Inertia/React + MySQL + Redis
-> **Méthode** : Docker Compose sur VPS, image autoportante (nginx + php-fpm)
+> **Méthode** : image construite par GitHub Actions, publiée sur GHCR, tirée par le VPS
+> **Le VPS ne compile rien** : il n'a que ~2,7 Gi de marge et héberge déjà lokea et dymora_app
 > **Déclenchement** : manuel — `Actions → Deploy to VPS → Run workflow` (voir étape 8)
 > **Référence** : `docs/DEPLOIEMENT_VPS.md` du projet lokea (même poste, même VPS) —
 > les problèmes qui y sont recensés ont été rejoués un par un ici, voir la
@@ -17,8 +18,9 @@
 |                | Local (Sail)         | Production (VPS)                      |
 | -------------- | -------------------- | ------------------------------------- |
 | Compose        | `docker-compose.yml` | `docker-compose.prod.yml`             |
-| Port           | 8086                 | à choisir, derrière le Nginx hôte     |
-| Assets Vite    | serveur de dev       | buildés **dans l'image**              |
+| Port           | 8086                 | 8086, derrière le Nginx hôte          |
+| Image          | construite en local  | tirée depuis `ghcr.io/shikileliondor/ivoir-app` |
+| Assets Vite    | serveur de dev       | buildés dans l'image, sur le runner GitHub |
 | Serveur web    | Sail                 | nginx + php-fpm dans le conteneur `app` |
 | Queue          | —                    | conteneur `queue` dédié               |
 | Scheduler      | —                    | conteneur `scheduler` dédié           |
@@ -69,37 +71,32 @@ systemctl start docker
 
 ---
 
-## Étape 2 — Swap (à faire AVANT le premier build)
+## Étape 2 — Mémoire : pourquoi le VPS ne build pas
 
-**Obligatoire.** Le build Vite d'Ivoir transforme ~2 950 modules (React 19,
-three.js, Tailwind 4) et produit un chunk de 884 ko. Sans swap, l'OOM killer tue
-`npm run build` sans message d'erreur exploitable — le build s'arrête, point.
+Relevé du 12/08/2026 sur ce VPS :
 
-```bash
-free -h                      # vérifier s'il y a déjà du swap
-fallocate -l 2G /swapfile
-chmod 600 /swapfile
-mkswap /swapfile
-swapon /swapfile
-echo '/swapfile none swap sw 0 0' >> /etc/fstab
-free -h                      # confirmer les 2 Go
+```
+Mem:   5.8Gi total, 3.4Gi used, 1.9Gi available
+Swap:  2.0Gi total, 1.2Gi used, 798Mi free
 ```
 
-Lokea a déjà ajouté 2 Go de swap sur ce VPS, et le swap est global à la machine :
-l'étape est donc probablement déjà faite. **Mais 2 Go partagés entre lokea, Odoo,
-Renkya et le build d'Ivoir, c'est juste.** Si `free -h` montre le swap déjà bien
-entamé au repos, passer à 4 Go avant de builder :
+Soit **~2,7 Gi de marge**, sur une machine qui fait tourner lokea, dymora_app et
+Odoo en production. Le build Vite d'Ivoir (2 950 modules, React 19, three.js)
+n'y tient pas confortablement — et si l'OOM killer se déclenche, il tue le plus
+gros processus, **qui peut être `lokea-app` ou `dymora_app`**. Un déploiement
+d'Ivoir pourrait faire tomber deux sites tiers.
 
-```bash
-swapoff /swapfile
-fallocate -l 4G /swapfile
-chmod 600 /swapfile
-mkswap /swapfile
-swapon /swapfile
-```
+**D'où le choix d'architecture : l'image est construite par GitHub Actions et
+publiée sur GHCR. Le VPS ne fait qu'un `docker compose pull`.** Aucun swap
+supplémentaire n'est nécessaire, et le déploiement passe de plusieurs minutes de
+compilation à quelques secondes de téléchargement.
 
-Autre garde-fou possible pendant le build : arrêter temporairement les conteneurs
-non critiques pour libérer de la RAM.
+> C'est d'ailleurs la conclusion à laquelle lokea est arrivé : son
+> `docs/DEPLOIEMENT_VPS.md` décrit encore un build dans le Dockerfile (problème
+> n° 4, « OOM Killer tue le build Vite », corrigé par du swap), mais son
+> Dockerfile réel ne contient plus aucun `npm` et son `deploy.yml` build les
+> assets sur le runner. La doc n'a jamais été mise à jour — le swap n'était qu'un
+> pansement, la vraie correction a été de sortir le build du VPS.
 
 ---
 
@@ -169,13 +166,15 @@ MAIL_FROM_ADDRESS=contact@...
 SHOP_NOTIFICATION_EMAIL=ivoircuisson@dym.ci
 ```
 
-Générer la clé applicative :
+Générer la clé applicative **depuis la machine de dev** (le VPS n'a pas encore
+l'image à ce stade) :
 
 ```bash
-docker compose -f docker-compose.prod.yml run --rm app php artisan key:generate --show
+docker compose exec laravel.test php artisan key:generate --show
 ```
 
-Copier la valeur `base64:...` dans `APP_KEY=`.
+Copier la valeur `base64:...` dans le `APP_KEY=` du VPS. Ne pas réutiliser la clé
+de développement : une clé distincte par environnement.
 
 > **Contrairement à lokea, garder `SESSION_DRIVER=database`, `QUEUE_CONNECTION=database`
 > et `CACHE_STORE=database` fonctionne ici.** Lokea a dû basculer sur redis parce que
@@ -188,17 +187,19 @@ Le `.env` n'est pas versionné : il survit aux `git reset --hard` du déploiemen
 
 ---
 
-## Étape 5 — Choisir un port libre sur le VPS
+## Étape 5 — Port
 
-Le VPS héberge déjà d'autres projets. Vérifier avant de fixer `APP_PROD_PORT` :
+Relevé du 12/08/2026 sur ce VPS : `8080` = lokea, `8081` = dymora_app (lié à
+`127.0.0.1`), `8082` occupé, `8069`/`8072` = Odoo, plus toute la plage
+`5001-5255`. **Le 8086 est libre** — c'est le défaut de
+`docker-compose.prod.yml`, rien à changer.
+
+Pour revérifier après coup :
 
 ```bash
-ss -tlnp | sort -t: -k2 -n
+ss -tlnp | awk '{print $4}' | grep -oE '[0-9]+$' | sort -n -u | tr '\n' ' '
 docker ps --format '{{.Names}}\t{{.Ports}}'
 ```
-
-Lokea occupe `8080`. Prendre un port libre (8086 par défaut dans
-`docker-compose.prod.yml`) et le reporter dans `.env`.
 
 ---
 
@@ -244,6 +245,15 @@ problème n° 9 de lokea :
 grep -rn "server_name" /etc/nginx/sites-enabled/
 ```
 
+> Relevé du 12/08/2026 : seul `renkya.ci www.renkya.ci` est déclaré. **Aucun
+> conflit possible pour le domaine d'Ivoir.**
+>
+> À noter au passage : lokea n'a plus aucun bloc dans `sites-enabled/`. Il est
+> donc servi en direct sur `156.67.28.90:8080`, sans reverse proxy — ni page 502,
+> ni `proxy_buffers`. C'est très probablement son problème n° 7 (symlink
+> `sites-enabled` supprimé) qui est revenu. Ça ne bloque pas Ivoir, mais ça vaut
+> le signalement côté lokea.
+
 Activer :
 
 ```bash
@@ -256,12 +266,22 @@ systemctl reload nginx
 
 ## Étape 7 — Premier lancement
 
+L'image doit d'abord exister sur GHCR : lancer une première fois
+**Actions → Deploy to VPS → Run workflow**. Le job `build` la publie, le job
+`deploy` fait le reste automatiquement.
+
+Si tu préfères dérouler le premier lancement à la main sur le VPS, il faut
+s'authentifier auprès de GHCR (l'image est privée, comme le dépôt). Créer un
+Personal Access Token GitHub avec la portée `read:packages`, puis :
+
 ```bash
 cd /var/www/ivoir
-docker compose -f docker-compose.prod.yml up -d --build
+echo "<PAT>" | docker login ghcr.io -u shikileliondor --password-stdin
+docker compose -f docker-compose.prod.yml pull app
+docker compose -f docker-compose.prod.yml up -d
 ```
 
-Le build prend plusieurs minutes : composer, `npm ci`, puis Vite. Suivre :
+Suivre le démarrage :
 
 ```bash
 docker compose -f docker-compose.prod.yml ps
@@ -333,11 +353,11 @@ trigger sur `master` (une ligne) — ou de renommer la branche et d'adapter le
 | 1 | `php-fpm -D` incompatible avec l'image Docker         | ✅ Neutralisé — `start.sh` fait `php-fpm &` + `exec nginx`        |
 | 2 | Permissions `storage/` perdues après restart          | ✅ Neutralisé — `chown` au démarrage + convention `--user www-data` |
 | 3 | `ViteManifestNotFoundException`                        | ✅ Neutralisé — le Dockerfile compile le front dans l'image       |
-| 4 | OOM killer tue le build Vite                           | ⚠️ **Ouvert** — swap obligatoire, étape 2                        |
+| 4 | OOM killer tue le build Vite                           | ✅ Neutralisé — le build se fait sur le runner GitHub, plus sur le VPS |
 | 5 | `upstream sent too big header` (nginx → php-fpm)       | ✅ Neutralisé — `fastcgi_buffers` dans `docker/app/nginx.conf`    |
 | 6 | `upstream sent too big header` (hôte → conteneur)      | ⚠️ **Ouvert** — `proxy_buffers` à mettre, étape 6                |
 | 7 | Symlink `sites-enabled` supprimé → 404                 | ⚠️ Opérationnel — recréer le lien, `nginx -t && reload`          |
-| 9 | Conflit `server_name` entre projets du VPS             | ⚠️ **Ouvert** — vérifier à l'étape 6                             |
+| 9 | Conflit `server_name` entre projets du VPS             | ✅ Vérifié — seul `renkya.ci` est déclaré sur ce VPS              |
 | 10| `.env` bakéen dans l'image                             | ✅ Neutralisé — monté en volume `:ro`, et supprimé après le build |
 | 11| Drivers `database` → 500 (tables absentes)             | ✅ Sans objet — Ivoir a les migrations `cache`/`jobs`/`sessions`  |
 | 12| `storage:link` — permission denied en `www-data`       | ✅ Neutralisé — `start.sh` le fait en root, avec `--force`        |
@@ -357,10 +377,24 @@ Trois pièges spécifiques à Ivoir, trouvés en validant l'image :
 ```bash
 cd /var/www/ivoir
 git pull origin master
-docker compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.prod.yml pull app
+docker compose -f docker-compose.prod.yml up -d
 docker compose -f docker-compose.prod.yml exec -T --user www-data app php artisan migrate --force
 docker image prune -f
 ```
+
+## Revenir en arrière
+
+Chaque déploiement publie deux tags : `:latest` et `:<sha du commit>`. Pour
+repasser sur une version précédente, sans rien rebuilder :
+
+```bash
+cd /var/www/ivoir
+IVOIR_IMAGE=ghcr.io/shikileliondor/ivoir-app:<sha> docker compose -f docker-compose.prod.yml up -d
+```
+
+Les SHA disponibles sont listés dans l'onglet **Packages** du dépôt GitHub.
+Attention : un rollback ne défait pas les migrations déjà appliquées.
 
 ## Passage en HTTPS
 
