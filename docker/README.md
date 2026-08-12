@@ -69,6 +69,66 @@ Trois services partagent la même image :
 - `queue` — `queue:work`
 - `scheduler` — `schedule:run` toutes les 60 s
 
+## Déploiement VPS (GitHub Actions)
+
+`.github/workflows/deploy.yml` se déclenche sur push `master` ou manuellement
+(`workflow_dispatch`). Les pushes qui ne touchent que `prompts/`, `.claude/`,
+`.cursor/` ou des `.md` sont ignorés.
+
+Le runner ne construit **rien** : il ouvre juste une session SSH. Tout le build
+se passe sur le VPS, parce que le Dockerfile d'Ivoir compile déjà le front
+lui-même. Le workflow enchaîne `git pull` → `up -d --build` → attente que le
+conteneur soit `healthy` → `migrate --force` → `docker image prune`.
+
+### Secrets GitHub requis
+
+| Secret        | Contenu                                     |
+| ------------- | ------------------------------------------- |
+| `VPS_HOST`    | IP ou domaine du serveur                    |
+| `VPS_USER`    | utilisateur SSH                             |
+| `VPS_SSH_KEY` | clé privée ed25519 autorisée sur le serveur |
+
+### Préparation du VPS (une seule fois)
+
+```bash
+sudo mkdir -p /var/www/ivoir
+sudo chown "$USER" /var/www/ivoir
+git clone https://github.com/shikileliondor/ivoir.git /var/www/ivoir
+cd /var/www/ivoir
+cp .env.example .env
+```
+
+Puis éditer `.env` — il n'est pas versionné, il survit donc aux
+`git reset --hard` du déploiement :
+
+- `APP_ENV=production`, `APP_DEBUG=false`
+- `APP_KEY=` → `docker compose -f docker-compose.prod.yml run --rm app php artisan key:generate --show`
+- `APP_URL` = l'URL publique réelle
+- `DB_PASSWORD` — un vrai mot de passe, pas `password`
+- `APP_PROD_PORT` si le 8086 n'est pas le bon port derrière le reverse proxy
+- `MAIL_MAILER` autre que `log`, sinon aucun mail ne part
+
+Premier démarrage :
+
+```bash
+docker compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.prod.yml exec -T --user www-data app php artisan migrate --force
+```
+
+### Commandes artisan en production
+
+Toujours `--user www-data`, sinon les fichiers créés appartiennent à root et
+PHP-FPM ne peut plus écrire dans `storage/`. Et toujours `-T` en SSH ou en CI,
+sans TTY la commande reste bloquée :
+
+```bash
+docker compose -f docker-compose.prod.yml exec -T --user www-data app php artisan ...
+```
+
+Après toute modification du `.env` sur le VPS, redémarrer le conteneur
+(`docker compose -f docker-compose.prod.yml restart app`) : `start.sh` relance
+`artisan optimize` et reconstruit les caches avec la nouvelle config.
+
 ## Fichiers
 
 ```

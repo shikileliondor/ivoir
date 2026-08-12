@@ -19,7 +19,12 @@
       "Bash(git -C d:/projects_dev_dym/lokea status --short)",
       "Bash(python -c ' *)",
       "Bash(cd \"/c/Users/BE serveur2/.claude\" && echo \"=== user CLAUDE.md ===\"; grep -niE \"git|commit|push\" CLAUDE.md 2>/dev/null | head -20 || echo \"\\(pas de CLAUDE.md utilisateur\\)\"; echo \"=== lokea memory ===\"; ls projects/d--projects-dev-dym-lokea/memory/ 2>/dev/null || echo \"\\(aucune\\)\"; echo \"=== ivoir memory ===\"; ls projects/d--projects-dev-dym-ivoir/memory/ 2>/dev/null || echo \"\\(aucune\\)\")",
-      "Read(//c/Users/BE serveur2/.claude/**)"
+      "Read(//c/Users/BE serveur2/.claude/**)",
+      "Bash(sed -n '/## CI\\\\/CD/,/## SEO/p' CLAUDE.md)",
+      "Bash(sed -n '/## VPS Production/,/## Email/p' CLAUDE.md)",
+      "Bash(docker compose exec -T laravel.test php -r ' *)",
+      "Bash(bash -n /tmp/vps_deploy.sh)",
+      "Bash(bash -c 'set -e; status=\"\"; for _ in 1 2 3; do [ \"$status\" = \"healthy\" ] && break; done; echo \"loop survived, status=[$status]\"')"
     ]
   }
 }

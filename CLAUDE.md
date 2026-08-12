@@ -35,6 +35,18 @@ Avant d'ajouter un service Docker : lister les conteneurs **y compris arrêtés*
 
 Tous les ports viennent de `.env` (`APP_PORT`, `VITE_PORT`, `FORWARD_DB_PORT`, `FORWARD_REDIS_PORT`, `FORWARD_PHPMYADMIN_PORT`). Ne jamais écrire un port en dur dans un fichier compose.
 
+## CI/CD et production
+
+Un seul workflow : `.github/workflows/deploy.yml`, sur push `master` ou `workflow_dispatch`. Il n'y a **plus de workflow de lint ni de tests** — `composer test` en local est le seul garde-fou.
+
+- Le runner ne build rien : il se connecte en SSH et le VPS fait tout (`git pull` → `up -d --build` → attente `healthy` → `migrate --force` → `image prune`). Le Dockerfile compile le front lui-même, pas besoin de rsync d'assets.
+- Sur le VPS, toujours `docker-compose.prod.yml`, jamais `docker-compose.yml`.
+- Toute commande artisan en prod : `exec -T --user www-data app`. Sans `--user www-data` les fichiers appartiennent à root et PHP-FPM ne peut plus écrire dans `storage/` ; sans `-T` la commande bloque faute de TTY.
+- Ne pas ajouter de `config:cache`/`route:cache`/`view:cache` au déploiement : `start.sh` lance déjà `artisan optimize` à chaque démarrage, une fois le vrai `.env` monté.
+- La branche est `master` — dans le trigger comme dans le `git pull`. Les deux doivent rester cohérentes.
+
+Détail complet (secrets, bootstrap du VPS) : [docker/README.md](docker/README.md).
+
 ## Trois espaces de routage
 
 `routes/web.php` définit trois zones, dans cet ordre :

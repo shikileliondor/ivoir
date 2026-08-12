@@ -1,0 +1,83 @@
+name: Deploy to VPS
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'prompts/**'
+      - '.claude/**'
+      - '.cursor/**'
+      - '**.md'
+
+# Deux déploiements simultanés se marcheraient dessus sur le VPS (même
+# working tree git, même compose). Le second attend que le premier finisse.
+concurrency:
+  group: deploy-vps
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Pas de build d'assets ici : contrairement à lokea, le Dockerfile
+      # d'Ivoir compile le front lui-même (docker/app/Dockerfile, étape
+      # `build`). Le runner n'a donc qu'à déclencher le déploiement.
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy on VPS
+        run: |
+          ssh -i ~/.ssh/id_ed25519 \
+              -o StrictHostKeyChecking=no \
+              -o ServerAliveInterval=60 \
+              -o ServerAliveCountMax=30 \
+              ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+            set -e
+
+            git config --global --add safe.directory /var/www/ivoir
+            cd /var/www/ivoir
+
+            git reset --hard HEAD
+            git pull origin master
+
+            docker compose -f docker-compose.prod.yml up -d --build
+
+            # `up -d` rend la main dès que le conteneur démarre, pas quand
+            # l'app répond : start.sh doit encore poser les liens storage et
+            # construire les caches. Migrer trop tôt échouerait.
+            echo "Attente du conteneur app…"
+            status=""
+            for _ in $(seq 1 60); do
+              status=$(docker compose -f docker-compose.prod.yml ps --format '{{.Health}}' app 2>/dev/null | head -1)
+              [ "$status" = "healthy" ] && break
+              sleep 5
+            done
+
+            if [ "$status" != "healthy" ]; then
+              echo "Le conteneur app n'est pas healthy (état : ${status:-inconnu})."
+              docker compose -f docker-compose.prod.yml logs --tail=80 app
+              exit 1
+            fi
+
+            # --user www-data : sans ça les fichiers créés appartiennent à
+            # root et PHP-FPM ne peut plus écrire dans storage/.
+            # -T : pas de TTY disponible en SSH/CI, sinon la commande bloque.
+            docker compose -f docker-compose.prod.yml exec -T --user www-data app \
+              php artisan migrate --force
+
+            # Pas de config:cache / route:cache / view:cache ici : start.sh
+            # lance déjà `php artisan optimize` à chaque démarrage, une fois
+            # le vrai .env monté.
+
+            # Chaque déploiement laisse l'image précédente orpheline (~900 Mo).
+            docker image prune -f
+
+            echo "Déploiement terminé."
+          EOF
