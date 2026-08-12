@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-NetTCPConnection -State Listen)",
+      "PowerShell(docker compose -f d:\\\\projects_dev_dym\\\\ivoir\\\\docker-compose.yml --project-directory d:\\\\projects_dev_dym\\\\ivoir config --services)",
+      "PowerShell(docker compose -f d:\\\\projects_dev_dym\\\\ivoir\\\\docker-compose.prod.yml --project-directory d:\\\\projects_dev_dym\\\\ivoir config --services)",
+      "PowerShell(Set-Location d:\\\\projects_dev_dym\\\\ivoir; docker compose exec -T laravel.test php artisan storage:link; docker compose exec -T laravel.test php artisan config:clear; Start-Sleep -Seconds 2; try { $r = Invoke-WebRequest -Uri http://localhost:8086/up -UseBasicParsing -TimeoutSec 30; \"UP -> $\\($r.StatusCode\\)\" } catch { \"UP -> ERREUR: $\\($_.Exception.Message\\)\" }; try { $r2 = Invoke-WebRequest -Uri http://localhost:8087/ -UseBasicParsing -TimeoutSec 30; \"PMA -> $\\($r2.StatusCode\\)\" } catch { \"PMA -> ERREUR: $\\($_.Exception.Message\\)\" })",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri http://localhost:8086/ -UseBasicParsing -TimeoutSec 60; \"HOME -> $\\($r.StatusCode\\) / $\\($r.Content.Length\\) octets\" } catch { \"HOME -> ERREUR: $\\($_.Exception.Message\\)\" })",
+      "Bash(grep -n \"^#\\\\{1,3\\\\} \" CLAUDE.md)",
+      "Bash(docker compose *)",
+      "Bash(echo \"exit=$?\")",
+      "Read(//tmp/**)",
+      "Bash(docker rm *)",
+      "Bash(docker run *)",
+      "Bash(docker exec *)",
+      "Bash(echo \"build_exit=$?\")",
+      "Bash(echo \"exit=$? \\(rien = aucune référence lokea\\)\")",
+      "Bash(grep -nE \"^\\(use|Route::|//|/\\\\*\\)\" routes/web.php)",
+      "Bash(git -C d:/projects_dev_dym/lokea status --short)",
+      "Bash(python -c ' *)",
+      "Bash(cd \"/c/Users/BE serveur2/.claude\" && echo \"=== user CLAUDE.md ===\"; grep -niE \"git|commit|push\" CLAUDE.md 2>/dev/null | head -20 || echo \"\\(pas de CLAUDE.md utilisateur\\)\"; echo \"=== lokea memory ===\"; ls projects/d--projects-dev-dym-lokea/memory/ 2>/dev/null || echo \"\\(aucune\\)\"; echo \"=== ivoir memory ===\"; ls projects/d--projects-dev-dym-ivoir/memory/ 2>/dev/null || echo \"\\(aucune\\)\")",
+      "Read(//c/Users/BE serveur2/.claude/**)"
+    ]
+  }
+}

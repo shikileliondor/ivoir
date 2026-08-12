@@ -1,0 +1,94 @@
+# Environnement de production : image autoportante (nginx + php-fpm + assets
+# Vite déjà buildés), avec worker de queue et scheduler séparés.
+#
+#   docker compose -f docker-compose.prod.yml up -d --build
+services:
+    app:
+        build:
+            context: '.'
+            dockerfile: 'docker/app/Dockerfile'
+        image: 'ivoir-app'
+        ports:
+            - '${APP_PROD_PORT:-8086}:80'
+        volumes:
+            - './.env:/var/www/html/.env:ro'
+            - './storage:/var/www/html/storage'
+        networks:
+            - ivoir
+        depends_on:
+            mysql:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+        restart: unless-stopped
+
+    queue:
+        image: 'ivoir-app'
+        command: ['php', '/var/www/html/artisan', 'queue:work', '--sleep=3', '--tries=3', '--max-time=3600']
+        volumes:
+            - './.env:/var/www/html/.env:ro'
+            - './storage:/var/www/html/storage'
+        networks:
+            - ivoir
+        depends_on:
+            - app
+        restart: unless-stopped
+
+    scheduler:
+        image: 'ivoir-app'
+        command: ['/bin/sh', '-c', 'while true; do php /var/www/html/artisan schedule:run --verbose --no-interaction; sleep 60; done']
+        volumes:
+            - './.env:/var/www/html/.env:ro'
+            - './storage:/var/www/html/storage'
+        networks:
+            - ivoir
+        depends_on:
+            - app
+        restart: unless-stopped
+
+    mysql:
+        image: 'mysql:8.4'
+        environment:
+            MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
+            MYSQL_ROOT_HOST: '%'
+            MYSQL_DATABASE: '${DB_DATABASE}'
+            MYSQL_USER: '${DB_USERNAME}'
+            MYSQL_PASSWORD: '${DB_PASSWORD}'
+        volumes:
+            - 'ivoir-mysql:/var/lib/mysql'
+        networks:
+            - ivoir
+        healthcheck:
+            test:
+                - CMD
+                - mysqladmin
+                - ping
+                - '-p${DB_PASSWORD}'
+            retries: 3
+            timeout: 5s
+        restart: unless-stopped
+
+    redis:
+        image: 'redis:alpine'
+        volumes:
+            - 'ivoir-redis:/data'
+        networks:
+            - ivoir
+        healthcheck:
+            test:
+                - CMD
+                - redis-cli
+                - ping
+            retries: 3
+            timeout: 5s
+        restart: unless-stopped
+
+networks:
+    ivoir:
+        driver: bridge
+
+volumes:
+    ivoir-mysql:
+        driver: local
+    ivoir-redis:
+        driver: local

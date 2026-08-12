@@ -1,0 +1,41 @@
+.git
+.github
+.claude
+.cursor
+.vscode
+.fleet
+.idea
+.nova
+.zed
+node_modules
+vendor
+prompts
+tests
+docs
+.env
+.env.backup
+.env.production
+*.log
+docker-compose.yml
+docker-compose.prod.yml
+docker-compose.override.yml
+npm-debug.log
+yarn-error.log
+.DS_Store
+.phpunit.cache
+.phpunit.result.cache
+bootstrap/ssr
+# Caches compilés sur l'host, avec les paquets de dev. Copiés tels quels dans
+# une image `composer install --no-dev`, ils font référence à des providers
+# absents (Pail, Pao, Collision, Pest) et l'app ne boote plus.
+# (bootstrap/cache/.gitignore est conservé pour que le dossier existe.)
+bootstrap/cache/*.php
+# Liens symboliques recréés par `artisan storage:link` au démarrage.
+public/storage
+public/images
+# Rushes caméra bruts (20 Go) — jamais dans le contexte de build.
+storage/images/com
+storage/logs
+storage/framework/cache
+storage/framework/sessions
+storage/framework/views
